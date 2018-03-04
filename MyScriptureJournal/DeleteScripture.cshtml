@@ -1,0 +1,90 @@
+﻿@{
+    var book = "";
+    int chapter = 0;
+    int verse = 0;
+    var note = "";
+    var scriptureId = "";
+
+    if (!IsPost)
+    {
+        if (!Request.QueryString["ID"].IsEmpty() && Request.QueryString["ID"].IsInt())
+        {
+            scriptureId = Request.QueryString["ID"];
+            var db = Database.Open("Scriptures");
+            var dbCommand = "SELECT * FROM Scriptures WHERE ID = @0";
+            var row = db.QuerySingle(dbCommand, scriptureId);
+            if (row != null)
+            {
+                book = row.Book;
+                chapter = row.Chapter;
+                verse = row.Verse;
+                note = row.Notes;
+            }
+            else
+            {
+                Validation.AddFormError("No scripture was found for that ID.");
+            }
+        }
+        else
+        {
+            Validation.AddFormError("No scripture was found for that ID.");
+        }
+    }
+    if (IsPost && !Request["buttonDelete"].IsEmpty())
+    {
+        scriptureId = Request.Form["scriptureId"];
+        var db = Database.Open("Scriptures");
+        var deleteCommand = "DELETE FROM Scriptures WHERE ID = @0";
+        db.Execute(deleteCommand, scriptureId);
+        Response.Redirect("~/Scriptures");
+    }
+}
+<html>
+<head>
+    <title>Delete a Scripture</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .validation-summary-errors {
+            border: 2px dashed red;
+            color: red;
+            font-weight: bold;
+            margin: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Delete a Scripture</h1>
+    @Html.ValidationSummary()
+    <p><a href="~/Scriptures">Return to all Scriptures</a></p>
+
+    <form method="post">
+        <fieldset>
+            <legend>Scripture Information</legend>
+
+            <p>
+                <span>Book:</span>
+                <span>@book</span>
+            </p>
+
+            <p>
+                <span>Chapter:</span>
+                <span>@chapter</span>
+            </p>
+
+            <p>
+                <span>Verse:</span>
+                <span>@verse</span>
+            </p>
+            <p>
+                <span>Note:</span>
+                <span>@note</span>
+            </p>
+            <input type="hidden" name="scriptureid" value="@scriptureId" />
+            <p><input type="submit" name="buttonDelete" value="Delete Scripture" /></p>
+        </fieldset>
+    </form>
+</body>
+</html>

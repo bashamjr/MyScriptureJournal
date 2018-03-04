@@ -1,0 +1,105 @@
+﻿@{
+    var book = "";
+    int chapter = 0;
+    int verse = 0;
+    var note = "";
+    var date = DateTime.Now;
+    var scriptureId = "";
+
+    if (!IsPost){
+        if(!Request.QueryString["ID"].IsEmpty() && Request.QueryString["ID"].IsInt())
+        {
+            scriptureId = Request.QueryString["ID"];
+            var db = Database.Open("Scriptures");
+            var dbCommand = "SELECT * FROM Scriptures WHERE ID = @0";
+            var row = db.QuerySingle(dbCommand, scriptureId);
+
+            if (row != null)
+            {
+                book = row.Book;
+                chapter = row.Chapter;
+                verse = row.Verse;
+                note = row.Notes;
+            }
+            else
+            {
+                Validation.AddFormError("No Scripture was found for that ID.");
+            }
+        }
+        else{
+            Validation.AddFormError("No Scripture was selected.");
+        }
+    }
+    if (IsPost)
+    {
+        Validation.RequireField("book", "You must enter a book name");
+        Validation.RequireField("chapter", "Chapter is required");
+        Validation.RequireField("verse", "You haven't entered a verse");
+        Validation.RequireField("scriptureid", "No scripture ID was submitted!");
+
+        book = Request.Form["book"];
+        chapter = int.Parse(Request.Form["chapter"]);
+        verse = int.Parse(Request.Form["verse"]);
+        note = Request.Form["note"];
+        scriptureId = Request.Form["scriptureId"];
+
+        if (Validation.IsValid())
+        {
+            var db = Database.Open("Scriptures");
+            var updateCommand = "UPDATE Scriptures SET Book=@0, Chapter=@1, Verse=@2, Notes=@3, Date=@4 WHERE Id=@5";
+            db.Execute(updateCommand, book, chapter, verse, note, date, scriptureId);
+            Response.Redirect("~/Scriptures");
+        }
+    }
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Edit a Scripture</title>
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .validation-summary-errors {
+            border: 2px dashed red;
+            color: red;
+            font-weight: bold;
+            margin: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Edit a Scripture</h1>
+    @Html.ValidationSummary()
+    <form method="post">
+        <fieldset>
+            <legend>Scripture Information</legend>
+
+            <p>
+                <label for="book">Book:</label>
+                <input type="text" name="book" value="@book" />
+            </p>
+
+            <p>
+                <label for="chapter">Chapter:</label>
+                <input type="text" name="chapter" value="@chapter" />
+            </p>
+
+            <p>
+                <label for="verse">Verse:</label>
+                <input type="text" name="verse" value="@verse" />
+            </p>
+            <p>
+                <label for="note">Notes:</label>
+                <input type="text" name="note" value="@note" />
+            </p>
+            <input type="hidden" name="scriptureid" value="@scriptureId" />
+
+            <p><input type="submit" name="buttonSubmit" value="Submit Changes" /></p>
+        </fieldset>
+    </form>
+    <p><a href="~/Scriptures">Return to all Scriptures</a></p>
+</body>
+</html>
